@@ -1,0 +1,12 @@
+{
+ "page": null,
+ "url": "http://localhost:3123/",
+ "root": null,
+ "kind": "software",
+ "category": "screen-edge glow and synced lyrics app",
+ "primary": "Sign in free with publik",
+ "rounds": 3,
+ "start": "2026-11-20T07:41:33.139Z",
+ "by": "gate.mjs --start",
+ "holder": 77196
+}

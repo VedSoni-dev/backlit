@@ -69,44 +69,29 @@ const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefe
 
 /** The song's place in seconds, from load, looping; paused by the button, still under reduced motion.
  *  Every frame: the line and the words sung so far (state), the light's level on `root` (--lvl) and, when
- *  given, the progress bar and the time (refs, like the app's dock). Off screen it skips the drawing but keeps
- *  the clock it started on load. */
+ *  given, the progress bar and the time (refs, like the app's dock). */
 function useSong(rest: number, root: RefObject<HTMLElement | null>, dock?: { bar: RefObject<HTMLElement | null>; time: RefObject<HTMLElement | null> }) {
   const [frame, setFrame] = useState<Frame>(() => frameAt(rest));
   const [running, setRunning] = useState(true);
   const [still, setStill] = useState(false);
   const clk = useRef({ base: rest, anchor: 0 });
-  const seen = useRef(true);
   const last = useRef(frame);
 
   useEffect(() => { if (reduced()) { setStill(true); setRunning(false); } }, []);
-  useEffect(() => {
-    const el = root.current;
-    if (!el || typeof IntersectionObserver !== "function") return;
-    const io = new IntersectionObserver(([e]) => { seen.current = e.isIntersecting; }, { rootMargin: "120px" });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [root]);
 
   useEffect(() => {
-    const draw = (t: number, now: number, lvl: number) => {
+    const draw = (t: number, lvl: number) => {
       root.current?.style.setProperty("--lvl", lvl.toFixed(3));
       if (dock?.bar.current) dock.bar.current.style.transform = `scaleX(${Math.min(1, t / SONG_LEN).toFixed(4)})`;
       if (dock?.time.current) dock.time.current.textContent = `${clock(t)} / ${clock(SONG_LEN)}`;
-      void now;
     };
-    if (!running) {
-      const t = clk.current.base;
-      draw(t, 0, 0.32);
-      return;
-    }
+    if (!running) { draw(clk.current.base, 0.32); return; }
     clk.current.anchor = performance.now();
     let raf = 0, pulse = 0;
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       let t = clk.current.base + (now - clk.current.anchor) / 1000;
       if (t >= LOOP) { clk.current = { base: LOOP_FROM, anchor: now }; t = LOOP_FROM; }
-      if (!seen.current) return;
       const f = frameAt(t);
       if (f.idx !== last.current.idx || f.sung !== last.current.sung) {
         if (f.idx > last.current.idx && f.idx >= 0) pulse = 1;
@@ -115,7 +100,7 @@ function useSong(rest: number, root: RefObject<HTMLElement | null>, dock?: { bar
         setFrame(f);
       }
       pulse *= 0.93;
-      draw(t, now, Math.min(1, (0.36 + 0.14 * Math.sin(now / 760)) * 0.82 + pulse * 0.32));
+      draw(t, Math.min(1, (0.36 + 0.14 * Math.sin(now / 760)) * 0.82 + pulse * 0.32));
     };
     raf = requestAnimationFrame(tick);
     return () => {

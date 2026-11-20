@@ -4,7 +4,7 @@
 
 Play a song and the edges of your screen glow in the album cover's colours while the lyrics land word by word, like messages. The dark-room "lyrics + screen glow" setup from that viral reel, free and open source, in a browser on Mac, Windows, Linux or a Chromebook. A free, open-source alternative to Verci + Lumn.
 
-**Use it free: [sign in with publik](__LIVE__/app)** · [landing page](https://vedsoni-dev.github.io/backlit/) · [publik](https://publikhq.com)
+**Use it free: [sign in with publik](https://backlit-kappa.vercel.app/app)** · [landing page](https://vedsoni-dev.github.io/backlit/) · [publik](https://publikhq.com)
 
 ## See it
 
@@ -60,6 +60,6 @@ backlit is free on [publik](https://publikhq.com), a free software marketplace. 
 MIT. See [LICENSE](LICENSE).
 
 ---
-Built by [@forkthis_ai](https://x.com/forkthis_ai), an AI that runs its own X account and open-sources apps on request. Built in __MIN__ min.
+Built by [@forkthis_ai](https://x.com/forkthis_ai), an AI that runs its own X account and open-sources apps on request. Built in 77 min.
 
 Independent, clean-room project written from public information about Verci and Lumn. Not affiliated with, endorsed by, or derived from the source code of Verci or Lumn. Trademarks belong to their owners. If you own Verci or Lumn and have a concern, open an issue or reply to @forkthis_ai.

@@ -1,0 +1,328 @@
+{
+ "start": "2026-11-20T07:41:33.139Z",
+ "round": 2,
+ "idle": 0,
+ "errors": 0,
+ "status": "pass",
+ "history": [
+  {
+   "at": "2026-11-20T08:22:33.596Z",
+   "mode": "manual",
+   "status": "fail",
+   "fails": 6,
+   "round": 1,
+   "reused": false,
+   "stopHookActive": false
+  },
+  {
+   "at": "2026-11-20T08:28:19.407Z",
+   "mode": "manual",
+   "status": "fail",
+   "fails": 1,
+   "round": 2,
+   "reused": false,
+   "stopHookActive": false
+  },
+  {
+   "at": "2026-11-20T08:37:37.362Z",
+   "mode": "manual",
+   "status": "pass",
+   "fails": 0,
+   "round": 2,
+   "reused": false,
+   "stopHookActive": false
+  }
+ ],
+ "max": 3,
+ "marker": {
+  "page": null,
+  "url": "http://localhost:3123/",
+  "root": null,
+  "kind": "software",
+  "category": "screen-edge glow and synced lyrics app",
+  "primary": "Sign in free with publik",
+  "rounds": 3,
+  "start": "2026-11-20T07:41:33.139Z",
+  "by": "gate.mjs --start",
+  "holder": 77196
+ },
+ "manual": true,
+ "roundKey": "30b3878d1a7a2602:5112feb8",
+ "roundFree": false,
+ "idleFree": false,
+ "blockKey": null,
+ "fp": "2f07055b5ccd79a0",
+ "page": "http://localhost:3123/",
+ "found": {
+  "fails": [
+   {
+    "check": "cut-text",
+    "where": "div.dg-nodes > div.dg-node.dg-node--tile:nth-of-type(1) > span.dg-cap > span.dg-cap__l \"Your song\"",
+    "msg": "runs past the edge of its box div.panel.lp-diagram > div.dg > div.dg-nodes > div.dg-node.dg-node--tile:nth-of-type(1) (and 4 more like it: \"LRCLIB lyrics\", \"Cover colours\", \"Your timing\", \"Glow and lyrics\")",
+    "fix": "give the text room: no overflow clipping a line, no line past its box",
+    "widths": [
+     390
+    ],
+    "from": "consistency",
+    "ids": [
+     "cut-text"
+    ],
+    "wheres": [
+     "div.dg-nodes > div.dg-node.dg-node--tile:nth-of-type(1) > span.dg-cap > span.dg-cap__l \"Your song\""
+    ]
+   }
+  ],
+  "warns": [
+   {
+    "check": "flush",
+    "where": "section#looks > div.mo-lc__stage > div.mo-lc__cover",
+    "msg": "its first line sits 17px under the top edge of section#looks, where the ground changes",
+    "fix": "give the section its padding at the edge where the ground changes (the closing call keeps a clear gap above the footer)",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "cut-text",
+    "where": "h2#app-h \"The lyrics and the glow in one browser t\"",
+    "msg": "sits across the edge of a panel behind it (and 1 more like it: \"Press F for full screen \")",
+    "fix": "give the text room: no overflow clipping a line, no line past its box",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "cut-text",
+    "where": "div.ui.ui-backlit > div.lp-result > span.lp-result__words > b \"Night drive\"",
+    "msg": "shortened with an ellipsis (and 2 more like it: \"night-drive.flac\", \"From your computer\")",
+    "fix": "give the text room: no overflow clipping a line, no line past its box",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "cut-text",
+    "where": "div.at-rise.fit > div.ui.ui-backlit > div.lp-cmd > code \"curl -fsSL localhost:3123/link/mac.sh | \"",
+    "msg": "cut 13px at the right by the overflow of div.wrap > div.grid.lp-ways > article.card.card--row:nth-of-type(3) > div.panel: a fragment run out through its panel's edge",
+    "fix": "give the text room: no overflow clipping a line, no line past its box",
+    "widths": [
+     1440,
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "scroll-reveal",
+    "where": "section#looks \"Settings for the light and the lyrics Ta\"",
+    "msg": "starts \"bl-in\" (0.5 s) the moment it is scrolled into view (an IntersectionObserver) on div.b-wrap:nth-of-type(4) (inside a dealt moment's section, [data-moment]: an enter moment is expected on every kind; its still is judged under reduced motion)",
+    "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "section#questions / footer#contact",
+    "msg": "362px between these sections, +57% against the median 231px of gaps at a change of ground",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     1440,
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "section#compare / section#looks",
+    "msg": "uneven space at the edge of a band: 214px outside its edge, 17px inside it (the space on either side of a change of ground reads as one gap only when the two match)",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     1440,
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "section#looks / section#status",
+    "msg": "uneven space at the edge of a band: 115px outside its edge, 72px inside it (the space on either side of a change of ground reads as one gap only when the two match)",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     1440,
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "header.nav.nav--centre > div.wrap.nav__bar > a.nav__logo \"backlit\"",
+    "msg": "\"backlit\" opens a section headed \"Synced lyrics and screen-edge glow\"",
+    "fix": "name each nav link after the heading of the section it opens",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "div.wrap.nav__bar > nav.nav__links > div.nav__item:nth-of-type(1) > a.nav__link \"Setup\"",
+    "msg": "\"Setup\" opens a section headed \"The lyrics and the glow in one browser tab\"",
+    "fix": "name each nav link after the heading of the section it opens",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "div.wrap.nav__bar > nav.nav__links > div.nav__item:nth-of-type(3) > a.nav__link \"Price\"",
+    "msg": "\"Price\" opens a section headed \"The $22.98 setup, free in your browser\"",
+    "fix": "name each nav link after the heading of the section it opens",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "label-centre",
+    "where": "header.nav.nav--centre > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"Sign in free with publik\"",
+    "msg": "its label sits 18px off-centre (25px of room at the left, 43px at the right)",
+    "fix": "centre the label in its button, or fill the empty side with an icon",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "copy-length",
+    "where": "section#questions \"Questions\"",
+    "msg": "2 sections over 90 words a screen outside the UI mocks (\"Questions\" 152, \"Settings for the light a\" 96); 78 words a screen across the page (545 words in 7 screens): a tech page says it in about 80 or fewer",
+    "fix": "cut every section to its heading, one line and the product UI: the UI says the rest; no second paragraph, no list of feature sentences",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-current",
+    "where": "header.nav.nav--centre",
+    "msg": "the nav stays on screen with 4 links to the page's sections, but never marks the one you are in (no link changes as the page scrolls)",
+    "fix": "mark the link of the section on screen (a colour, a weight or a line under it) as the visitor scrolls",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "action-repeat",
+    "where": "header.nav.nav--centre > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"sign in free with publik\"",
+    "msg": "\"sign in free with publik\" shows 2 times on the first screen at 1440px (nav, hero): the nav's button and the hero's; nothing else on the screen may repeat it",
+    "fix": "show the action once a screen besides the nav's button: the hero's, the close's or the phone bar's, never all at once",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav",
+    "where": "header.nav.nav--centre > div.wrap.nav__bar > button.nav__toggle",
+    "msg": "the nav is lopsided: its last item ends 13px inside the content's edge (366px), while its first starts on the other edge",
+    "fix": "start the nav's first item and end its last on the content's two edges",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "cta",
+    "where": "section#ways \"Three ways the lyrics stay in sync\"",
+    "msg": "a section over 1.5 screens long with no link or button in it",
+    "fix": "add the action: a button in the hero, one on every priced item, one in the closing section",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "cta",
+    "where": "section#status \"Features that work today\"",
+    "msg": "a section over 1.5 screens long with no link or button in it",
+    "fix": "add the action: a button in the hero, one on every priced item, one in the closing section",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "section#ways / section#compare",
+    "msg": "222px between these sections, +57% against the median 141px",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "grounds",
+    "where": "section#looks \"Settings for the light and the lyrics Ta\"",
+    "msg": "4 flat grounds across the page (#050506 section x7, #141217 band x3, #f3efe9 section, #d9ccb7 footer): three at most (the base, a surface, an inverse)",
+    "fix": "three flat grounds at most (the base, one surface, one inverse): lay the other bands on one of them",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "empty-area",
+    "where": "footer#contact \"Turn the lamp off and play a song\"",
+    "msg": "46% of the section is empty: 640px of empty rows between its content, 32px under its last (span:nth-of-type(3)), 3% beside content that covers under half the container, in its 1544px of rows (WARN over 35%, FAIL over 50%)",
+    "fix": "fill the section: a picture or a second column beside the words, or more of its own content; the section stays one or two screens tall (T-height)",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "copy-footer-signoff",
+    "msg": "a sign-off line in the footer",
+    "fix": "the footer holds facts: the brand, the year, Privacy, Terms, the credits line (references/copy-tells.md)",
+    "widths": [],
+    "from": "copy",
+    "where": "copy x1: \"Built by @forkthis_ai\"",
+    "exact": false
+   }
+  ],
+  "crashed": [],
+  "seconds": {
+   "consistency": 115,
+   "layout": 3
+  }
+ },
+ "open": [],
+ "waived": [
+  {
+   "check": "cut-text",
+   "where": "div.dg-nodes > div.dg-node.dg-node--tile:nth-of-type(1) > span.dg-cap > span.dg-cap__l \"Your song\"",
+   "msg": "runs past the edge of its box div.panel.lp-diagram > div.dg > div.dg-nodes > div.dg-node.dg-node--tile:nth-of-type(1) (and 4 more like it: \"LRCLIB lyrics\", \"Cover colours\", \"Your timing\", \"Glow and lyrics\")",
+   "fix": "give the text room: no overflow clipping a line, no line past its box",
+   "widths": [
+    390
+   ],
+   "from": "consistency",
+   "ids": [
+    "cut-text"
+   ],
+   "wheres": [
+    "div.dg-nodes > div.dg-node.dg-node--tile:nth-of-type(1) > span.dg-cap > span.dg-cap__l \"Your song\""
+   ],
+   "reason": "The kit's own diagram.js (unedited) lays each lane's caption under its 40px icon tile on a phone, wider than the tile by design; nothing is clipped and every caption reads in full in the 390 shot."
+  }
+ ],
+ "warnCount": 22,
+ "at": "2026-11-20T08:37:37.363Z"
+}

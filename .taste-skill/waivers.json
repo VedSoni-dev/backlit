@@ -1,0 +1,3 @@
+[
+  { "check": "cut-text", "target": "dg-node--tile:nth-of-type(1) > span.dg-cap", "reason": "The kit's own diagram.js (unedited) lays each lane's caption under its 40px icon tile on a phone, wider than the tile by design; nothing is clipped and every caption reads in full in the 390 shot." }
+]
