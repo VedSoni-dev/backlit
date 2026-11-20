@@ -4,7 +4,7 @@
 
 Play a song and the edges of your screen glow in the album cover's colours while the lyrics land word by word, like messages. The dark-room "lyrics + screen glow" setup from that viral reel, free and open source, in a browser on Mac, Windows, Linux or a Chromebook. A free, open-source alternative to Verci + Lumn.
 
-**Use it free: [sign in with publik](https://backlit-kappa.vercel.app/app)** · [landing page](https://vedsoni-dev.github.io/backlit/) · [publik](https://publikhq.com)
+**backlit moved to [frontend.vedantsoni.com/backlit](https://frontend.vedantsoni.com/backlit)** (free, sign in with publik), now with ten lyric styles: Thread, Sing, Poster, Flash, Neon, Vinyl, Scroll, Cutout, Film and Drop. Its code lives on in [VedSoni-dev/frontend › pieces/backlit](https://github.com/VedSoni-dev/frontend/tree/main/pieces/backlit); this repo is the first version, kept as it was.
 
 ## See it
 

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>backlit: your screen glows with the song</title>
+<meta name="description" content="Play a song and the edges of your screen glow in the album cover's colours while the lyrics land word by word. Free and open source, in your browser on Mac, Windows and Linux.">
+<meta property="og:title" content="backlit: your screen glows with the song">
+<meta property="og:description" content="The lyrics + screen glow setup, free in your browser.">
+<meta property="og:image" content="https://vedsoni-dev.github.io/backlit/poster.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://vedsoni-dev.github.io/backlit/poster.png">
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#050506; --ink:#f4f2ee; --mute:#9a958c; --line:#26231f; --card:#14120f; --accent:#ff4fb4; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:400 17px/1.55 Inter, system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; }
+  .wrap { max-width:1080px; margin:0 auto; padding:0 20px; }
+  header { display:flex; align-items:center; justify-content:space-between; padding:22px 0; }
+  .brand { font:800 22px/1 "Inter Tight", sans-serif; letter-spacing:-.02em; text-decoration:none; }
+  .by { display:flex; align-items:center; gap:8px; color:var(--mute); font-size:14px; text-decoration:none; }
+  .by img { width:22px; height:22px; border-radius:50%; background:#000; }
+  h1 { font:800 clamp(44px,7.5vw,88px)/.98 "Inter Tight", sans-serif; letter-spacing:-.045em; margin:56px 0 18px; }
+  h1 em { font-style:normal; color:var(--accent); }
+  .lede { font-size:clamp(18px,2.2vw,21px); color:var(--mute); max-width:640px; margin:0 0 30px; }
+  .ctas { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:44px; }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:13px 20px; border-radius:999px; font:600 16px/1 Inter, sans-serif; text-decoration:none; border:1px solid var(--line); }
+  .btn.primary { background:var(--accent); color:#0b0a09; border-color:var(--accent); }
+  .btn:hover { filter:brightness(1.08); }
+  .film { border-radius:18px; overflow:hidden; border:1px solid var(--line); background:#000; aspect-ratio:16/9; }
+  .film video { width:100%; height:100%; display:block; }
+  .receipts { display:flex; flex-wrap:wrap; gap:36px; margin:40px 0 8px; }
+  .receipts b { display:block; font:800 44px/1 "Inter Tight", sans-serif; letter-spacing:-.03em; }
+  .receipts span { color:var(--mute); font-size:14px; }
+  section { padding:44px 0; border-top:1px solid var(--line); margin-top:44px; }
+  h2 { font:700 28px/1.1 "Inter Tight", sans-serif; letter-spacing:-.02em; margin:0 0 18px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; }
+  .card b { display:block; font:600 17px/1.3 Inter, sans-serif; margin-bottom:4px; }
+  .card p { margin:0; color:var(--mute); font-size:15px; }
+  ul.gaps { margin:0; padding-left:18px; color:var(--mute); }
+  code { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:2px 6px; font-size:14px; }
+  pre { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; overflow:auto; font-size:14px; }
+  footer { color:var(--mute); font-size:14px; padding:40px 0 60px; border-top:1px solid var(--line); margin-top:44px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./">backlit</a>
+    <a class="by" href="https://x.com/forkthis_ai"><img src="forkthis.svg" alt="">built by @forkthis_ai</a>
+  </header>
+
+  <h1>your screen glows<br>with the <em>song.</em></h1>
+  <p class="lede">Play a song and the edges of your screen light up in the album cover's colours while the lyrics land word by word, like messages. The dark-room lyrics + glow setup, free in your browser on Mac, Windows, Linux or a Chromebook. Works with Spotify, Apple Music, YouTube or a song file.</p>
+  <div class="ctas">
+    <a class="btn primary" href="https://backlit-kappa.vercel.app/app">Use it free · Sign in with publik</a>
+    <a class="btn" href="https://github.com/VedSoni-dev/backlit">Source code</a>
+  </div>
+
+  <div class="film"><video src="backlit.mp4" poster="poster.png" controls playsinline muted autoplay loop preload="metadata"></video></div>
+
+  <div class="receipts">
+    <div><b>77</b><span>minutes to build</span></div>
+    <div><b>3176</b><span>lines of code</span></div>
+    <div><b>$0</b><span>vs $22.98 for the paid pair</span></div>
+    <div><b>MIT</b><span>open source</span></div>
+  </div>
+
+  <section>
+    <h2>What works</h2>
+    <div class="grid">
+      <div class="card"><b>The light</b><p>The screen's edges glow in colours picked from the cover, flowing around the rim and breathing with the bass, every sung word, or the room through your mic.</p></div>
+      <div class="card"><b>Lyrics word by word</b><p>Stacked bubbles or one big line. Word timing from LRCLIB, the free lyrics library; line-timed songs get their words spread out.</p></div>
+      <div class="card"><b>It plays the song</b><p>Search a song and it plays on the page in YouTube's own player, the lyrics locked to it. Or paste a YouTube link.</p></div>
+      <div class="card"><b>Anything, anywhere</b><p>Playing it in Spotify or on a record? Hit Start as it starts, or tap the line you're hearing. ← → nudges the timing, remembered per song.</p></div>
+      <div class="card"><b>Your song files</b><p>MP3, M4A, FLAC, WAV, OGG: exact timing, tags and cover read in the browser. Nothing is uploaded.</p></div>
+      <div class="card"><b>Follow Spotify or Apple Music</b><p>One command on your Mac or Windows PC and the lyrics keep up with your player, song after song. It only answers your own browser.</p></div>
+      <div class="card"><b>Full screen, floating lyrics</b><p>F for full screen, a floating lyrics window over your other apps in Chrome and Edge, and the screen stays awake.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Not yet</h2>
+    <ul class="gaps">
+      <li>On phones the light glows around the tab, not around everything else you have open.</li>
+      <li>The Windows helper isn't tested on a Windows PC yet; the Mac helper isn't tested with Spotify playing yet.</li>
+      <li>No lyrics editor or translations. Lyrics only exist for songs LRCLIB has.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Run it yourself</h2>
+    <pre>git clone https://github.com/VedSoni-dev/backlit
+cd backlit && npm install && npm run dev</pre>
+    <p style="color:var(--mute)">The hosted version opens with Sign in with publik: free on <a href="https://publikhq.com">publik</a>, a free software marketplace whose mission is free software for everyone.</p>
+  </section>
+
+  <footer>
+    backlit is a free, open-source alternative to Verci and Lumn, written from public information. Not affiliated with either.
+    Built start to finish by <a href="https://x.com/forkthis_ai">@forkthis_ai</a>, an AI that open-sources apps. @ it under any post with an app in it.
+  </footer>
+</div>
+</body>
+</html>
