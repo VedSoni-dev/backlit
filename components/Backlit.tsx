@@ -6,13 +6,16 @@ import { lineAt, parseLrc, withWords, wordsAt, type Line } from "@/lib/lrc";
 import { PRESETS } from "@/lib/palette";
 import { Meter, colorsFromArt, findSongs, fmtDur, lyricsFor, matchSong, readTags, type Lyrics as LyricsData, type Song, type Track } from "@/lib/client";
 import { Follow, type NowPlaying } from "@/components/Follow";
+import { findVideos, loadYT, YT_STATE, type YTPlayer } from "@/lib/youtube";
+import { splitVideoTitle, videoIdFrom, type Video } from "@/lib/ytsearch";
 
-type Mode = "none" | "file" | "manual" | "follow";
+type Mode = "none" | "file" | "manual" | "follow" | "video";
 type LyrState = "idle" | "loading" | "words" | "lines" | "estimated" | "none";
 type Panel = "pick" | "settings" | "lines" | null;
-type Prefs = { size: number; power: number; palette: string; style: LyricStyle; align: "left" | "center"; hideIdle: boolean };
+type Prefs = { size: number; power: number; palette: string; style: LyricStyle; align: "left" | "center"; hideIdle: boolean; source: "here" | "elsewhere" };
+type Vid = { list: Video[]; i: number; state: "finding" | "loading" | "ok" | "press" | "failed" };
 
-const DEFAULTS: Prefs = { size: 18, power: 1, palette: "from the art", style: "bubbles", align: "left", hideIdle: true };
+const DEFAULTS: Prefs = { size: 18, power: 1, palette: "from the art", style: "bubbles", align: "left", hideIdle: true, source: "here" };
 const LEAD = 0.12; // show a line a hair early: the bubble takes a moment to land
 const AUDIO_EXT = /\.(mp3|m4a|aac|flac|wav|ogg|oga|opus|webm|aiff?)$/i;
 
@@ -68,6 +71,8 @@ export default function Backlit() {
   const [searchErr, setSearchErr] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [full, setFull] = useState(false);
+  const [vid, setVid] = useState<Vid>({ list: [], i: 0, state: "finding" }); // the song's YouTube uploads, best first
+  const [pasted, setPasted] = useState<string | null>(null); // a YouTube link typed into the search box
 
   const rootRef = useRef<HTMLDivElement>(null);
   const pipRootRef = useRef<HTMLDivElement | null>(null);
@@ -95,6 +100,13 @@ export default function Backlit() {
   const loadToken = useRef(0);
   const objectUrls = useRef<string[]>([]);
   const wake = useRef<{ release(): Promise<void> } | null>(null);
+  const ytHost = useRef<HTMLDivElement>(null);
+  const yt = useRef<YTPlayer | null>(null);
+  const ytMaking = useRef<Promise<YTPlayer> | null>(null);
+  const ytClock = useRef({ t: 0, at: 0 });
+  const ytEvents = useRef<{ state(s: number): void; error(code: number): void }>({ state() {}, error() {} });
+  const vidRef = useRef(vid); vidRef.current = vid;
+  const identify = useRef(false); // a pasted link: work the song out from the video's title once it plays
 
   // ---------- saved preferences and recent songs (this browser only) ----------
   useEffect(() => { setPrefs(ls.get("backlit:prefs", DEFAULTS)); setRecents(ls.list<Song>("backlit:recent")); }, []);
@@ -107,6 +119,13 @@ export default function Backlit() {
   const cur = useCallback((): number => {
     const m = modeRef.current;
     if (m === "file") return audioRef.current?.currentTime ?? 0;
+    if (m === "video") {
+      // YouTube reports its position a few times a second; glide between reports so words land smoothly
+      const p = yt.current; if (!p?.getCurrentTime) return 0;
+      const t = p.getCurrentTime() || 0, now = performance.now(), c = ytClock.current;
+      if (t !== c.t || p.getPlayerState() !== YT_STATE.PLAYING) { c.t = t; c.at = now; return t; }
+      return c.t + Math.min(1, (now - c.at) / 1000);
+    }
     if (m === "follow" && followRef.current) { const f = followRef.current; return f.playing ? f.position + (performance.now() - f.at) / 1000 : f.position; }
     const c = clock.current; return c.anchor == null ? c.base : c.base + (performance.now() - c.anchor) / 1000;
   }, []);
@@ -114,16 +133,19 @@ export default function Backlit() {
   const play = useCallback(() => {
     setReady(false);
     if (modeRef.current === "file") { void ctxRef.current?.resume(); void audioRef.current?.play().catch(() => say("Press play again: the browser wants a click first.")); return; }
+    if (modeRef.current === "video") { yt.current?.playVideo(); return; }
     if (modeRef.current === "manual" && clock.current.anchor == null) { clock.current.anchor = performance.now(); setPlaying(true); }
   }, [say]);
   const pause = useCallback(() => {
     if (modeRef.current === "file") { audioRef.current?.pause(); return; }
+    if (modeRef.current === "video") { yt.current?.pauseVideo(); return; }
     if (modeRef.current === "manual" && clock.current.anchor != null) { clock.current = { base: cur(), anchor: null }; setPlaying(false); }
   }, [cur]);
   const toggle = useCallback(() => (playingRef.current ? pause() : play()), [play, pause]);
   const seekTo = useCallback((t: number, andPlay = false) => {
     t = Math.max(0, t);
     if (modeRef.current === "file" && audioRef.current) { audioRef.current.currentTime = t; if (andPlay) play(); return; }
+    if (modeRef.current === "video" && yt.current) { yt.current.seekTo(t, true); ytClock.current = { t, at: performance.now() }; if (andPlay) yt.current.playVideo(); return; }
     if (modeRef.current === "manual") { clock.current = { base: t, anchor: clock.current.anchor != null || andPlay ? performance.now() : null }; if (andPlay) { setPlaying(true); setReady(false); } }
   }, [play]);
   const nudge = useCallback((d: number) => setOffset((o) => { const n = Math.round((o + d) * 10) / 10; say(n === 0 ? "Lyrics timing reset" : `Lyrics ${n > 0 ? "+" : ""}${n.toFixed(1)} s ${n > 0 ? "(sooner)" : "(later)"}`); return n; }), [say]);
@@ -203,9 +225,126 @@ export default function Backlit() {
     loadToken.current++;
     const a = audioRef.current; if (a) { a.pause(); a.removeAttribute("src"); a.load(); }
     clock.current = { base: 0, anchor: null };
+    try { yt.current?.stopVideo(); } catch { /* not ready yet */ }
+    identify.current = false;
+    setVid({ list: [], i: 0, state: "finding" });
     objectUrls.current.forEach((u) => URL.revokeObjectURL(u)); objectUrls.current = [];
     setPlaying(false); setReady(false); setExample(false);
   }, []);
+
+  // ---------- source 0: play the song right here, in YouTube's own player; the lyrics follow its clock ----------
+  const ensurePlayer = useCallback((id: string): Promise<YTPlayer> => {
+    if (ytMaking.current) return ytMaking.current.then((p) => { p.loadVideoById(id); return p; });
+    const made = loadYT().then((YT) => new Promise<YTPlayer>((resolve) => {
+      const el = document.createElement("div");
+      ytHost.current!.replaceChildren(el);
+      const p = new YT.Player(el, {
+        videoId: id, width: "100%", height: "100%",
+        playerVars: { autoplay: 1, playsinline: 1, rel: 0, origin: window.location.origin },
+        events: {
+          onReady: () => { yt.current = p; resolve(p); if (modeRef.current === "video") p.playVideo(); },
+          onStateChange: (e: { data: number }) => ytEvents.current.state(e.data),
+          onError: (e: { data: number }) => ytEvents.current.error(e.data),
+        },
+      });
+    }));
+    ytMaking.current = made;
+    made.catch(() => { ytMaking.current = null; });
+    return made;
+  }, []);
+
+  // couldn't play it here: fall back to the tap-along clock with the lyrics we already have
+  const tapAlongInstead = useCallback((msg: string) => {
+    try { yt.current?.stopVideo(); } catch { /* fine */ }
+    setMode("manual"); modeRef.current = "manual";
+    clock.current = { base: 0, anchor: null };
+    setPlaying(false); setReady(true); setVid((v) => ({ ...v, state: "failed" }));
+    say(msg);
+  }, [say]);
+
+  // browsers that won't start sound without a tap on the video itself: say so
+  const pressHint = useCallback((token: number) => {
+    window.setTimeout(() => { if (token === loadToken.current && modeRef.current === "video" && !playingRef.current) setVid((v) => (v.state === "loading" ? { ...v, state: "press" } : v)); }, 3500);
+  }, []);
+
+  const playHere = useCallback(async (s: Song) => {
+    stopEverything(); stopFollow();
+    const token = ++loadToken.current;
+    setMode("video"); modeRef.current = "video";
+    setTrack({ title: s.title, artist: s.artist, album: s.album, duration: s.duration, art: s.art, store: s.store });
+    void paint(s.art);
+    setPanel(null); remember(s);
+    loadingLyrics();
+    lyricsFor(s).then((l) => { if (token === loadToken.current) applyLyrics(l); }).catch(() => { if (token === loadToken.current) { setLines([]); setLyr("none"); } });
+    let list: Video[] = [];
+    try { list = await findVideos(s); } catch { list = []; }
+    if (token !== loadToken.current) return;
+    if (!list.length) { tapAlongInstead("Couldn't find it on YouTube. Play it anywhere and hit Start."); return; }
+    setVid({ list, i: 0, state: "loading" });
+    try { await ensurePlayer(list[0].id); } catch { if (token === loadToken.current) tapAlongInstead("YouTube didn't load. Play the song anywhere and hit Start."); return; }
+    pressHint(token);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopEverything, applyLyrics, loadingLyrics, paint, ensurePlayer, tapAlongInstead, pressHint]);
+
+  // a pasted YouTube link: play it, then find the lyrics from the video's title
+  const playLink = useCallback(async (id: string) => {
+    stopEverything(); stopFollow();
+    const token = ++loadToken.current;
+    setMode("video"); modeRef.current = "video";
+    setTrack({ title: "YouTube video", artist: "", album: "", duration: 0, art: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` });
+    setArtColors(null); setPanel(null); setQ(""); setPasted(null);
+    setVid({ list: [{ id, title: "", channel: "", duration: 0, official: false }], i: 0, state: "loading" });
+    loadingLyrics(); identify.current = true;
+    try { await ensurePlayer(id); } catch { if (token === loadToken.current) { say("YouTube didn't load. Check your connection."); setLyr("none"); } return; }
+    pressHint(token);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopEverything, loadingLyrics, ensurePlayer, pressHint, say]);
+
+  const identifyVideo = useCallback(async () => {
+    const p = yt.current; if (!p) return;
+    const token = loadToken.current;
+    const d = p.getVideoData?.() ?? {}, duration = p.getDuration() || 0;
+    const g = splitVideoTitle(d.title ?? "", d.author ?? "");
+    if (!g.title) { setLyr("none"); return; }
+    setTrack((t) => (t ? { ...t, title: g.title, artist: g.artist, duration } : t));
+    try {
+      const s = await matchSong({ title: g.title, artist: g.artist, duration });
+      if (token !== loadToken.current) return;
+      if (s && s.kind !== "none") setTrack((t) => (t ? { ...t, title: s.title, artist: s.artist, album: s.album, art: s.art ?? t.art, store: s.store } : t));
+      void paint(s?.art ?? null);
+      const l = s ? await lyricsFor({ id: s.id, duration }) : { lines: [], kind: "none" as const };
+      if (token === loadToken.current) applyLyrics(l);
+    } catch { if (token === loadToken.current) setLyr("none"); }
+  }, [applyLyrics, paint]);
+
+  ytEvents.current = {
+    state(st) {
+      if (modeRef.current !== "video") return;
+      const p = yt.current;
+      ytClock.current = { t: p?.getCurrentTime?.() ?? 0, at: performance.now() };
+      if (st === YT_STATE.PLAYING) {
+        setPlaying(true); setVid((v) => ({ ...v, state: "ok" }));
+        const d = p?.getDuration() ?? 0;
+        if (d && !durRef.current) setTrack((t) => (t ? { ...t, duration: d } : t));
+        if (identify.current) { identify.current = false; void identifyVideo(); }
+      } else if (st === YT_STATE.PAUSED || st === YT_STATE.ENDED) setPlaying(false);
+    },
+    error() {
+      // this upload won't play on other sites (or is gone): try the next one, then fall back to tap-along
+      if (modeRef.current !== "video") return;
+      const v = vidRef.current;
+      if (v.i + 1 < v.list.length) { const i = v.i + 1; setVid({ ...v, i, state: "loading" }); yt.current?.loadVideoById(v.list[i].id); pressHint(loadToken.current); return; }
+      if (identify.current || v.list.length === 1 && !v.list[0].title) { identify.current = false; say("That video won't play on other sites. Try another link."); setVid({ ...v, state: "failed" }); setLyr("none"); return; }
+      tapAlongInstead("YouTube won't play this one here. Play it anywhere and hit Start.");
+    },
+  };
+
+  const otherVideo = useCallback(() => {
+    const v = vidRef.current; if (v.list.length < 2) return;
+    const i = (v.i + 1) % v.list.length;
+    setVid({ ...v, i, state: "loading" }); yt.current?.loadVideoById(v.list[i].id);
+    say(`Another upload of this song (${i + 1} of ${v.list.length})`);
+  }, [say]);
 
   // ---------- source 1: a song playing somewhere else (tap-along clock) ----------
   const chooseSong = useCallback(async (s: Song, opts: { example?: boolean } = {}) => {
@@ -225,7 +364,9 @@ export default function Backlit() {
   }, [stopEverything, applyLyrics, loadingLyrics, paint, say]);
 
   const runSearch = useCallback(async (text: string) => {
-    const t = text.trim(); if (t.length < 2) { setResults(null); return; }
+    const t = text.trim();
+    const link = videoIdFrom(t); setPasted(link);
+    if (link || t.length < 2) { setResults(null); return; }
     searchAbort.current?.abort(); const ac = new AbortController(); searchAbort.current = ac;
     setSearching(true); setSearchErr(null);
     try { const r = await findSongs(t, ac.signal); setResults(r.songs ?? []); if (r.error) setSearchErr(r.error); }
@@ -345,7 +486,7 @@ export default function Backlit() {
       const el = e.target as HTMLElement;
       if (el.closest("input, textarea, select, [contenteditable]")) { if (e.key === "Escape") (el as HTMLInputElement).blur(); return; }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === " ") { if (modeRef.current === "file" || modeRef.current === "manual") { e.preventDefault(); toggle(); } }
+      if (e.key === " ") { if (modeRef.current === "file" || modeRef.current === "manual" || modeRef.current === "video") { e.preventDefault(); toggle(); } }
       else if (e.key === "f" || e.key === "F") toggleFull();
       else if (e.key === "ArrowRight") { e.preventDefault(); nudge(0.5); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); nudge(-0.5); }
@@ -364,11 +505,19 @@ export default function Backlit() {
   const lyrNote = { idle: "", loading: "Finding the lyrics…", words: "Word-by-word lyrics", lines: "Synced lyrics", estimated: "Words only, timing estimated", none: "No lyrics found for this one" }[lyr];
   const tapAlong = mode === "manual";
   const hasSong = mode !== "none";
+  const pick = (s: Song) => void (prefs.source === "elsewhere" ? chooseSong(s) : playHere(s));
 
   return (
-    <div ref={rootRef} style={{ ["--tint" as string]: glowColors[1] ?? glowColors[0] }} className={`bl${full ? " is-full" : ""}${dragging ? " dragging" : ""}`} onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false); }} onDrop={onDrop}>
+    <div ref={rootRef} style={{ ["--tint" as string]: glowColors[1] ?? glowColors[0] }} className={`bl${full ? " is-full" : ""}${dragging ? " dragging" : ""}${mode === "video" ? " has-video" : ""}`} onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false); }} onDrop={onDrop}>
       <Glow colors={glowColors} size={prefs.size} power={prefs.power} />
       <audio ref={audioRef} preload="auto" />
+
+      {/* YouTube's own player, always in view while it plays (nothing is drawn over it) */}
+      <div className={`yt${mode === "video" ? "" : " off"}`}>
+        <div className={`yt-frame${vid.state === "finding" ? " finding" : ""}`}><div ref={ytHost} className="yt-host" /></div>
+        {mode === "video" && vid.state === "finding" && <p className="yt-note"><span className="spin" aria-hidden="true" /> Finding the song on YouTube…</p>}
+        {mode === "video" && vid.state === "press" && <p className="yt-note hot">Press play on the video to start</p>}
+      </div>
 
       <main className="scene">
         {hasSong && !ready && <Lyrics lines={lines} index={idx} sung={sung} style={prefs.style} meta={meta} align={prefs.align} />}
@@ -402,10 +551,11 @@ export default function Backlit() {
           </div>
           <div className="dock-mid">
             <div className="row tight">
-              {(mode === "file" || tapAlong) && <button className="icon big" onClick={toggle} aria-label={playing ? "Pause" : "Play"} title={playing ? "Pause (space)" : "Play (space)"}>{playing ? <IconPause /> : <IconPlay />}</button>}
+              {(mode === "file" || tapAlong || mode === "video") && <button className="icon big" onClick={toggle} aria-label={playing ? "Pause" : "Play"} title={playing ? "Pause (space)" : "Play (space)"}>{playing ? <IconPause /> : <IconPlay />}</button>}
               {mode === "follow" && <span className="pill live">{playing ? "Following your player" : "Paused in your player"}</span>}
               <span ref={timeRef} className="time">0:00</span>
               <span className="lyr-note">{lyrNote}{offset ? ` · ${offset > 0 ? "+" : ""}${offset.toFixed(1)} s` : ""}</span>
+              {mode === "video" && vid.list.length > 1 && <button className="link small" onClick={otherVideo} title="Play a different upload of this song">Wrong version?</button>}
             </div>
             <div className="bar" onClick={(e) => { if (mode === "follow" || !track?.duration) return; const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.clientX - r.left) / r.width) * track.duration); }} role="presentation">
               <div ref={barRef} className="bar-fill" />
@@ -435,19 +585,31 @@ export default function Backlit() {
               <div className="brand"><LogoMark /> backlit</div>
               {hasSong && <button className="icon" onClick={() => setPanel(null)} aria-label="Close"><IconX /></button>}
             </header>
-            <h1>What&apos;s playing?</h1>
+            <h1>{prefs.source === "here" ? "What do you want to hear?" : "What's playing?"}</h1>
+            <div className="src-row">
+              <div className="seg small src" role="group" aria-label="Where the song plays">
+                <button className={prefs.source === "here" ? "on" : ""} onClick={() => setPref("source", "here")} aria-pressed={prefs.source === "here"}>Play it here</button>
+                <button className={prefs.source === "elsewhere" ? "on" : ""} onClick={() => setPref("source", "elsewhere")} aria-pressed={prefs.source === "elsewhere"}>It&apos;s playing somewhere else</button>
+              </div>
+              <span className="tiny">{prefs.source === "here" ? "Plays on this page through YouTube. The lyrics follow it exactly." : "Spotify, Apple Music, a record: you hit Start as it starts."}</span>
+            </div>
             <div className="search">
               <IconSearch />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Song and artist, like “Flashing Lights Kanye”" autoFocus spellCheck={false} aria-label="Search for a song" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key !== "Enter") return; e.preventDefault(); if (pasted) void playLink(pasted); else if (results?.[0]) pick(results[0]); }} placeholder="Song and artist, or paste a YouTube link" autoFocus spellCheck={false} aria-label="Search for a song or paste a YouTube link" />
               {searching && <span className="spin" aria-hidden="true" />}
             </div>
             {searchErr && <p className="err">{searchErr}</p>}
+            {pasted && (
+              <ul className="results">
+                <li><button onClick={() => void playLink(pasted)}><img src={`https://i.ytimg.com/vi/${pasted}/mqdefault.jpg`} alt="" className="wide" /><span className="r-words"><b>Play this YouTube video</b><span>The lyrics are looked up from its title</span></span><span className="r-tag words">YouTube</span></button></li>
+              </ul>
+            )}
             {results && (
               <ul className="results">
                 {results.length === 0 && !searching && <li className="empty">Nothing found. Try the song name with fewer words, or the artist&apos;s name.</li>}
                 {results.map((s) => (
                   <li key={s.id}>
-                    <button onClick={() => void chooseSong(s)}>
+                    <button onClick={() => pick(s)}>
                       {s.art ? <img src={s.art.replace("600x600", "120x120")} alt="" /> : <span className="art-blank" />}
                       <span className="r-words"><b>{s.title}</b><span>{s.artist}{s.album ? ` · ${s.album}` : ""}</span></span>
                       <span className={`r-tag ${s.kind}`}>{{ words: "word by word", lines: "synced", plain: "words only", none: "no lyrics" }[s.kind]}</span>
@@ -462,7 +624,7 @@ export default function Backlit() {
                 <p className="label">Played here before</p>
                 <ul className="results">
                   {recents.map((s) => (
-                    <li key={s.id}><button onClick={() => void chooseSong(s)}>{s.art ? <img src={s.art.replace("600x600", "120x120")} alt="" /> : <span className="art-blank" />}<span className="r-words"><b>{s.title}</b><span>{s.artist}</span></span><span className="r-dur">{fmtDur(s.duration)}</span></button></li>
+                    <li key={s.id}><button onClick={() => pick(s)}>{s.art ? <img src={s.art.replace("600x600", "120x120")} alt="" /> : <span className="art-blank" />}<span className="r-words"><b>{s.title}</b><span>{s.artist}</span></span><span className="r-dur">{fmtDur(s.duration)}</span></button></li>
                   ))}
                 </ul>
               </div>
@@ -477,8 +639,8 @@ export default function Backlit() {
             <Follow active={following} onStart={() => setFollowing(true)} onStop={() => { stopFollow(); if (modeRef.current === "follow") { setMode("none"); setTrack(null); setLines([]); } }} onNow={onFollow} />
 
             <ol className="how" aria-label="How it works">
-              <li><b>1</b>Pick the song, or play a file.</li>
-              <li><b>2</b>Hit Start as the song starts, or tap the line you hear.</li>
+              <li><b>1</b>{prefs.source === "here" ? "Pick a song. It plays right here." : "Pick the song, or play a file."}</li>
+              <li><b>2</b>{prefs.source === "here" ? "The lyrics land with it, word by word." : "Hit Start as the song starts, or tap the line you hear."}</li>
               <li><b>3</b>Press F for full screen and turn the lights off.</li>
             </ol>
             <button className="link" onClick={() => void chooseSong({ id: -1, title: "Night drive", artist: "backlit", album: "", duration: 40, art: exampleArt(), store: null, kind: "lines" }, { example: true })}>See an example first</button>

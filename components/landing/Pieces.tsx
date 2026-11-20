@@ -13,13 +13,13 @@ const Tile = ({ id, name, w, h }: { id: string; name: string; w?: number; h?: nu
 const SEARCH = <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5" /><path d="M13.2 13.2 17 17" /></svg>;
 const NOTE = <svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 15V4.5l8-1.5V13" /><circle cx="5.8" cy="15" r="2.2" /><circle cx="13.8" cy="13" r="2.2" /></svg>;
 
-/** Way 1: search the song, then Start (or tap the line you hear). */
+/** Way 1: search the song and it plays right here (or hit Start with your own player). */
 export function SearchFragment() {
   return (
-    <div className="ui ui-backlit lp-frag" role="img" aria-label="backlit's song search: Night drive found with word-by-word lyrics, a Start button and the players it works with: Spotify, Apple Music and YouTube.">
+    <div className="ui ui-backlit lp-frag" role="img" aria-label="backlit's song search: Night drive found with word-by-word lyrics, a Play it here button and the players it works with: YouTube, Spotify and Apple Music.">
       <div className="lp-field" aria-hidden="true">{SEARCH}<span>night drive</span></div>
       <div className="lp-result" aria-hidden="true"><Cover className="lp-cover--row" /><span className="lp-result__words"><b>Night drive</b><span>backlit</span></span><em className="lp-tag lp-tag--words">Word by word</em><span className="lp-dur">0:40</span></div>
-      <div className="lp-start" aria-hidden="true"><span className="lp-btn">Start</span><span className="lp-hint">or tap the line you hear</span></div>
+      <div className="lp-start" aria-hidden="true"><span className="lp-btn">Play it here</span><span className="lp-hint">or hit Start in your own player</span></div>
       <div className="lp-players" aria-hidden="true"><Tile id="spotify" name="Spotify" /><Tile id="applemusic" name="Apple Music" /><Tile id="youtube" name="YouTube" w={24} h={17} /></div>
     </div>
   );

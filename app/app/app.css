@@ -246,3 +246,26 @@ kbd { font-family: var(--font-mono); font-size: 11px; padding: 1px 6px; border-r
   .sheet { bottom: 16px; top: auto; height: 70vh; }
   .scene-note { bottom: 190px; }
 }
+
+/* ---------- the song playing here: YouTube's own player, in a corner, never covered ---------- */
+.yt { position: absolute; z-index: 8; top: 20px; right: 20px; width: 356px; display: flex; flex-direction: column; gap: 8px; animation: land .45s cubic-bezier(.2,.9,.25,1.08) both; }
+.yt.off { display: none; }
+.yt-frame { position: relative; width: 100%; height: 200px; border-radius: 14px; overflow: hidden; background: #0c0b0e; border: 1px solid var(--line); box-shadow: 0 18px 60px rgba(0,0,0,.65); }
+.yt-frame.finding { background: linear-gradient(110deg, #0c0b0e 30%, #17151b 50%, #0c0b0e 70%) 0 0 / 300% 100%; animation: shimmer 1.4s linear infinite; }
+.yt-host, .yt-host iframe { width: 100%; height: 100%; display: block; border: 0; }
+.yt-note { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mute); padding: 0 4px; }
+.yt-note.hot { color: var(--ink); font-weight: 500; }
+@keyframes shimmer { to { background-position: -300% 0; } }
+.bl.has-video .sheet { top: 236px; }
+@media (min-width: 761px) and (max-width: 1400px) { .bl.has-video .scene { padding-right: 400px; } .bl.has-video .stack.left { transform: none; } }
+.src-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: -4px 0 14px; }
+.src-row .seg { margin: 0; }
+.seg.src button { text-transform: none; }
+.results img.wide { width: 64px; object-fit: cover; }
+.link.small { font-size: 12.5px; white-space: nowrap; }
+@media (max-width: 760px) {
+  .yt { top: 12px; left: 12px; right: 12px; width: auto; }
+  .bl.has-video .scene { padding-top: 236px; }
+  .bl.has-video .sheet { top: auto; height: min(70vh, calc(100% - 248px)); }
+  .bl.has-video .toast { top: 222px; }
+}

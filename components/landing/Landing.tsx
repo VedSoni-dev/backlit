@@ -119,8 +119,8 @@ export function Landing() {
             </div>
             <div className="grid lp-ways">
               <article className="card card--row span-4 m-nolift">
-                <h3>Search the song, then hit Start</h3>
-                <p>Press Start when the song starts in Spotify, Apple Music or YouTube, or tap the line you hear.</p>
+                <h3>Search the song. It plays right here</h3>
+                <p>It plays on the page through YouTube, and the lyrics follow it exactly. Paste a YouTube link, or play it in Spotify and hit Start.</p>
                 <div className="panel"><div className="stage"><div className="at-rise fit lp-fit"><SearchFragment /></div></div></div>
               </article>
               <article className="card card--row span-4 m-nolift">
@@ -244,7 +244,7 @@ export function Landing() {
                 </div>
                 <div className="faq__item">
                   <h3>Does backlit play the music?</h3>
-                  <p>Only song files you drop in. With Spotify, Apple Music or YouTube, your player plays and backlit keeps time beside it.</p>
+                  <p>Yes. Pick a song and it plays on the page in YouTube&apos;s own player, with the lyrics locked to it. It also plays song files you drop in, or keeps time beside Spotify or Apple Music.</p>
                 </div>
                 <div className="faq__item">
                   <h3>Where do the lyrics and covers come from?</h3>
