@@ -1,0 +1,26 @@
+{
+  "name": "backlit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Play a song and your screen glows in the album's colours while the lyrics land line by line. Free, in your browser, on Mac, Windows and Linux.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev",
+    "build": "node --no-warnings --test test/ && next build",
+    "start": "next start",
+    "test": "node --no-warnings --test test/"
+  },
+  "dependencies": {
+    "js-yaml": "^5.5.0",
+    "music-metadata": "12.3.4",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "5.9.3"
+  }
+}

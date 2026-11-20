@@ -1,0 +1,6 @@
+*, *::before, *::after { box-sizing: border-box; }
+html { color-scheme: dark; background: #050506; }
+body { margin: 0; background: #050506; color: #f3efe9; font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+img { max-width: 100%; }
+::selection { background: rgba(255, 63, 174, 0.35); }
+:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.7); outline-offset: 2px; }
